@@ -1,14 +1,28 @@
-# Imagen base con Java 17
-FROM eclipse-temurin:17-jdk
+# =========================
+# ETAPA 1: BUILD
+# =========================
+FROM eclipse-temurin:17-jdk AS build
 
-# Directorio de trabajo
 WORKDIR /app
 
-# Copiar el jar
-COPY target/ejercicio07-0.0.1-SNAPSHOT.jar app.jar
+# Copiamos todo el proyecto
+COPY . .
 
-# Exponer el puerto (Render usa 10000)
+# Damos permisos y compilamos
+RUN chmod +x mvnw && ./mvnw clean package -DskipTests
+
+# =========================
+# ETAPA 2: RUN
+# =========================
+FROM eclipse-temurin:17-jdk
+
+WORKDIR /app
+
+# Copiamos el jar generado desde la etapa build
+COPY --from=build /app/target/*.jar app.jar
+
+# Render usa el puerto 10000
 EXPOSE 10000
 
-# Comando de arranque
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Arranque
+CMD ["java", "-jar", "app.jar"]
